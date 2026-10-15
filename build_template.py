@@ -191,14 +191,16 @@ EQUATION = f'<m:oMath>{m_limit_term("8", "∞")}{mr("⇒")}{m_limit_term("3", "�
 
 
 # ------------------------------------------------------------------ table
-def cell(width, content, align='left', borders='', mar=''):
+def cell(width, content, align='left', borders='', mar='', keep_next=False):
     tcpr = f'<w:tcW w:w="{width}" w:type="dxa"/>'
     if borders:
         tcpr += f'<w:tcBorders>{borders}</w:tcBorders>'
     if mar:
         tcpr += f'<w:tcMar>{mar}</w:tcMar>'
     jc = '<w:jc w:val="center"/>' if align == 'center' else ''
-    return f'<w:tc><w:tcPr>{tcpr}</w:tcPr><w:p><w:pPr><w:pStyle w:val="TableText"/>{jc}</w:pPr>{content}</w:p></w:tc>'
+    keep = '<w:keepNext/>' if keep_next else ''
+    return (f'<w:tc><w:tcPr>{tcpr}</w:tcPr><w:p><w:pPr><w:pStyle w:val="TableText"/>'
+            f'{keep}<w:keepLines/>{jc}</w:pPr>{content}</w:p></w:tc>')
 
 
 def results_table():
@@ -222,17 +224,19 @@ def results_table():
            'w:noHBand="1" w:noVBand="1"/></w:tblPr><w:tblGrid>']
     out += [f'<w:gridCol w:w="{w}"/>' for w in widths]
     out.append('</w:tblGrid>')
-    out.append('<w:tr><w:trPr><w:tblHeader/></w:trPr>')
+    # Keep this short example table together, without tying its final row to the next section.
+    out.append('<w:tr><w:trPr><w:cantSplit/><w:tblHeader/></w:trPr>')
     for k, (w, c) in enumerate(zip(widths, header)):
         out.append(cell(w, c, 'left' if k == 0 else 'center',
-                        heavy.format(side='top') + light, top_pad + bottom_pad))
+                        heavy.format(side='top') + light, top_pad + bottom_pad, keep_next=True))
     out.append('</w:tr>')
     for r, row in enumerate(rows):
-        out.append('<w:tr>')
+        out.append('<w:tr><w:trPr><w:cantSplit/></w:trPr>')
         mar = (top_pad if r == 0 else '') + (bottom_pad if r == len(rows) - 1 else '')
         border = heavy.format(side='bottom') if r == len(rows) - 1 else ''
         for k, (w, c) in enumerate(zip(widths, row)):
-            out.append(cell(w, c, 'left' if k == 0 else 'center', border, mar))
+            out.append(cell(w, c, 'left' if k == 0 else 'center', border, mar,
+                            keep_next=r < len(rows) - 1))
         out.append('</w:tr>')
     out.append('</w:tbl>')
     return ''.join(out)
@@ -271,13 +275,13 @@ def body():
                   run('Middle Author', b=True), run('\u2009'), orcid('0000-0000-0000-0000'),
                   run('2\u20091', sup=True), run(' '),
                   run('Last Author', b=True), run('\u2009'), run('3', sup=True)))
-    # Non-breaking spaces keep each affiliation on one line, as in the LaTeX template
+    # Two balanced lines, with hyphenation suppressed, keep each affiliation intact in Word.
     def keep(text):
         return text.replace(' ', '\u00a0')
     p.append(para('Affiliations',
                   run('*', sup=True), run(keep('Equal contribution') + '\u2003'),
                   run('1', sup=True), run(keep('Olympus Academy of Mountaineering, Mytikas, Greece 402 00'), i=True),
-                  run('\u2003'),
+                  br(),
                   run('2', sup=True), run(keep('University of Underwater Studies, Atlantis 341'), i=True),
                   run('\u2003'),
                   run('3', sup=True), run(keep('University of Nowhere'), i=True)))
@@ -301,19 +305,6 @@ def body():
     p.append(text_para('BodyText',
                        'AI4X is non-archival: an accepted abstract is not a formal publication, so you are free to '
                        'publish the work later in a journal or in conference proceedings.'))
-
-    p.append(text_para('Heading1', 'Working with the template'))
-    p.append(text_para('FirstParagraph',
-                       'Use the styles of the template: Heading 1 and Heading 2 number the sections, Unnumbered '
-                       'Heading is for the acknowledgments and references, and Appendix Heading for the appendices. '
-                       'The numbers of the figures, tables, and equations, and the references to them, are fields: '
-                       'after moving things around, select all (Ctrl+A) and press F9 to update them.'))
-    p.append(text_para('BodyText',
-                       'The template embeds its font, Source Serif 4, so it looks the same on computers that do not '
-                       'have the font installed. Please submit a PDF, and check in it that the bold and italic text '
-                       'and the equations look right. Fill the title, the authors, and the keywords in '
-                       'File → Info → Properties: they become the PDF metadata, which improves search '
-                       'discoverability.'))
 
     p.append(text_para('Heading1', 'Substantial section'))
     p.append(para('FirstParagraph',
@@ -360,8 +351,23 @@ def body():
                   run('R', i=True), run('2', sup=True),
                   run(', and inference time per structure. The best values are in bold; the numbers are '
                       'illustrative.'),
-                  ppr='<w:keepNext/>'))
+                  ppr='<w:keepNext/><w:keepLines/>'))
     p.append(results_table())
+
+    # Keep the example content ahead of Word-specific instructions, as in the LaTeX layout.
+    p.append(text_para('Heading1', 'Working with the template'))
+    p.append(text_para('FirstParagraph',
+                       'Use the styles of the template: Heading 1 and Heading 2 number the sections, Unnumbered '
+                       'Heading is for the acknowledgments and references. Use Appendix Heading for appendices, '
+                       'and Appendix Heading 2 and Appendix Heading 3 for their subsections. '
+                       'The numbers of the figures, tables, and equations, and the references to them, are fields: '
+                       'after moving things around, select all (Ctrl+A) and press F9 to update them.'))
+    p.append(text_para('BodyText',
+                       'The template embeds its font, Source Serif 4, so it looks the same on computers that do not '
+                       'have the font installed. Please submit a PDF, and check in it that the bold and italic text '
+                       'and the equations look right. Fill the title, the authors, and the keywords in '
+                       'File → Info → Properties: they become the PDF metadata, which improves search '
+                       'discoverability.'))
 
     p.append(text_para('UnnumberedHeading', 'AI Acknowledgments'))
     p.append(para('FirstParagraph',
@@ -483,7 +489,8 @@ def styles_xml():
                '<w:b/><w:bCs/><w:sz w:val="24"/><w:szCs w:val="24"/>', nxt='Authors'),
         pstyle('Authors', 'Authors', '<w:keepNext/>' + spacing(0, 110, 240) + '<w:jc w:val="center"/>',
                nxt='Affiliations', builtin=False),
-        pstyle('Affiliations', 'Affiliations', '<w:keepNext/>' + spacing(0, 0, 214) + '<w:jc w:val="center"/>',
+        pstyle('Affiliations', 'Affiliations', '<w:keepNext/><w:suppressAutoHyphens/>'
+               + spacing(0, 0, 214) + '<w:jc w:val="center"/>',
                '<w:sz w:val="18"/><w:szCs w:val="18"/>', builtin=False),
         pstyle('FirstParagraph', 'First Paragraph', nxt='BodyText', builtin=False),
         pstyle('BodyText', 'Body Text', '<w:ind w:firstLine="240"/>', nxt='BodyText'),
@@ -502,6 +509,14 @@ def styles_xml():
         pstyle('AppendixHeading', 'Appendix Heading',
                heading_ppr('<w:numPr><w:numId w:val="2"/></w:numPr>') + '<w:jc w:val="left"/><w:outlineLvl w:val="0"/>',
                '<w:b/><w:bCs/>', nxt='FirstParagraph', builtin=False),
+        pstyle('AppendixHeading2', 'Appendix Heading 2',
+               heading_ppr('<w:numPr><w:ilvl w:val="1"/><w:numId w:val="2"/></w:numPr>')
+               + '<w:jc w:val="left"/><w:outlineLvl w:val="1"/>',
+               '<w:i/><w:iCs/>', nxt='FirstParagraph', builtin=False),
+        pstyle('AppendixHeading3', 'Appendix Heading 3',
+               heading_ppr('<w:numPr><w:ilvl w:val="2"/><w:numId w:val="2"/></w:numPr>')
+               + '<w:jc w:val="left"/><w:outlineLvl w:val="2"/>',
+               '<w:i/><w:iCs/>', nxt='FirstParagraph', builtin=False),
         pstyle('Caption', 'caption', spacing(200, 200) + '<w:ind w:left="200" w:hanging="200"/>',
                nxt='BodyText'),
         pstyle('Figure', 'Figure', '<w:keepNext/>' + spacing(120, 0, 240) + '<w:jc w:val="center"/>',
@@ -541,10 +556,12 @@ def numbering_xml():
                 '<w:pPr><w:ind w:left="0" w:firstLine="0"/></w:pPr></w:lvl>')
     headings = (lvl(0, 'decimal', '%1.', 'Heading1') + lvl(1, 'decimal', '%1.%2.', 'Heading2')
                 + lvl(2, 'decimal', '%1.%2.%3.', 'Heading3'))
+    appendices = (lvl(0, 'upperLetter', 'Appendix %1.', 'AppendixHeading')
+                  + lvl(1, 'decimal', '%1.%2.', 'AppendixHeading2')
+                  + lvl(2, 'decimal', '%1.%2.%3.', 'AppendixHeading3'))
     return (f'{XML_HEAD}<w:numbering xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
             f'<w:abstractNum w:abstractNumId="0"><w:multiLevelType w:val="multilevel"/>{headings}</w:abstractNum>'
-            '<w:abstractNum w:abstractNumId="1"><w:multiLevelType w:val="singleLevel"/>'
-            f'{lvl(0, "upperLetter", "Appendix %1.", "AppendixHeading")}</w:abstractNum>'
+            f'<w:abstractNum w:abstractNumId="1"><w:multiLevelType w:val="multilevel"/>{appendices}</w:abstractNum>'
             '<w:num w:numId="1"><w:abstractNumId w:val="0"/></w:num>'
             '<w:num w:numId="2"><w:abstractNumId w:val="1"/></w:num></w:numbering>')
 

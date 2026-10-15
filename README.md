@@ -4,6 +4,10 @@ Word version of the [AI4X 2027 LaTeX abstract template](https://github.com/kazee
 (the `AI4X-Abstract-Template` submodule): `AI4X-2027.docx`, and the same as a Word template, `AI4X-2027.dotx`.
 The example text explains the formatting rules and the conference policies.
 
+Use Heading 1, Heading 2, and Heading 3 for the main sections. For appendices, use
+Appendix Heading, Appendix Heading 2, and Appendix Heading 3 to number headings as
+Appendix A., A.1., and A.1.1. Subsection numbers restart under each new appendix.
+
 The layout follows `ai4x.cls`: A4, 2 cm margins, two columns 0.8 cm apart, Source Serif 10/12 pt. The
 template embeds [Source Serif 4](https://github.com/adobe-fonts/source-serif) (SIL Open Font License,
 `fonts/LICENSE.md`), so the font does not need to be installed.
