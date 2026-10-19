@@ -4,9 +4,8 @@ Word version of the [AI4X 2027 LaTeX abstract template](https://github.com/kazee
 (the `AI4X-Abstract-Template` submodule): `AI4X-2027.docx`, with an earlier Word template version in `AI4X-2027.dotx`.
 The example text explains the formatting rules and the conference policies.
 
-The current `AI4X-2027.docx` has been edited directly in Microsoft Office and is the
-source of truth. `build_template.py` no longer reproduces it, and `AI4X-2027.dotx`
-has not been updated with those manual edits.
+The current `AI4X-2027.do[ct]x` have been edited directly in Microsoft Office and are the
+source of truth. `build_template.py` no longer reproduces it.
 
 Use Heading 1, Heading 2, and Heading 3 for the main sections. For appendices, use
 Appendix Heading, Appendix Heading 2, and Appendix Heading 3 to number headings as
